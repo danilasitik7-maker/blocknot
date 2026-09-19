@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme-init>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f3f4ef">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Блокнот">
+<meta name="description" content="Личный блокнот: распорядок дня, напоминания, мысли, настроение и привычки. Всё хранится только на вашем устройстве.">
+<title>Блокнот</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<style>
+:root{
+  --paper:#f3f4ef;
+  --card:#fbfbf8;
+  --grid:rgba(30,50,95,.085);
+  --ink:#16233d;
+  --ink-2:#5a6a85;
+  --ink-3:#8b98ad;
+  --line:rgba(22,35,61,.14);
+  --pen:#2b48c7;
+  --pen-soft:rgba(43,72,199,.1);
+  --marker:#ffd84d;
+  --marker-soft:rgba(255,216,77,.45);
+  --red:#c0392b;
+  --green:#1f7a4d;
+  --r:14px;
+  --shadow:0 1px 0 rgba(22,35,61,.06), 0 6px 22px -14px rgba(22,35,61,.5);
+  --safe-b:env(safe-area-inset-bottom,0px);
+  --safe-t:env(safe-area-inset-top,0px);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#0f1420; --card:#161d2c; --grid:rgba(160,185,255,.06);
+    --ink:#e7ecf6; --ink-2:#a3aec3; --ink-3:#6f7b91;
+    --line:rgba(231,236,246,.14);
+    --pen:#89a4ff; --pen-soft:rgba(137,164,255,.14);
+    --marker:#ffcf3d; --marker-soft:rgba(255,207,61,.3);
+    --red:#ff7b6b; --green:#57c98c;
+    --shadow:0 1px 0 rgba(0,0,0,.3), 0 8px 26px -16px #000;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0f1420; --card:#161d2c; --grid:rgba(160,185,255,.06);
+  --ink:#e7ecf6; --ink-2:#a3aec3; --ink-3:#6f7b91;
+  --line:rgba(231,236,246,.14);
+  --pen:#89a4ff; --pen-soft:rgba(137,164,255,.14);
+  --marker:#ffcf3d; --marker-soft:rgba(255,207,61,.3);
+  --red:#ff7b6b; --green:#57c98c;
+  --shadow:0 1px 0 rgba(0,0,0,.3), 0 8px 26px -16px #000;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size:26px 26px;
+  color:var(--ink);
+  font-family:ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-size:16px; line-height:1.5;
+  -webkit-text-size-adjust:100%;
+  -webkit-tap-highlight-color:transparent;
+  min-height:100vh;
+}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:none;padding:0}
+:focus-visible{outline:2px solid var(--pen);outline-offset:2px;border-radius:6px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+.wrap{max-width:720px;margin:0 auto;padding:0 16px calc(96px + var(--safe-b));}
+header.top{
+  position:sticky;top:0;z-index:20;
+  background:color-mix(in srgb, var(--paper) 88%, transparent);
+  backdrop-filter:blur(10px);
+  padding:calc(12px + var(--safe-t)) 16px 10px;
+  border-bottom:1px solid var(--line);
+}
+.top-in{max-width:720px;margin:0 auto;display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.brand{font-family:ui-rounded, ui-sans-serif, system-ui, sans-serif;font-weight:600;font-size:19px;letter-spacing:-.01em;line-height:1.1}
+.today-date{color:var(--ink-2);font-size:13px;margin-top:2px}
+.icon-btn{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;border:1px solid var(--line);background:var(--card);font-size:16px}
+.icon-btn:active{transform:scale(.95)}
+
+h2.sec{font-family:ui-rounded, ui-sans-serif, system-ui, sans-serif;font-weight:500;font-size:15px;margin:26px 0 10px;letter-spacing:-.01em}
+.muted{color:var(--ink-2)}
+.tiny{font-size:13px}
+.empty{border:1px dashed var(--line);border-radius:var(--r);padding:20px;text-align:center;color:var(--ink-2);font-size:14px;background:color-mix(in srgb,var(--card) 60%,transparent)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+
+/* ---------- hero ---------- */
+.hero{margin-top:18px;display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.hero .big{font-family:ui-rounded, ui-sans-serif, system-ui, sans-serif;font-weight:600;font-size:clamp(30px,9vw,44px);line-height:1;letter-spacing:-.03em}
+.hero .sub{color:var(--ink-2);font-size:14px}
+.progress{margin-top:14px;height:8px;border-radius:99px;background:var(--pen-soft);overflow:hidden}
+.progress i{display:block;height:100%;background:var(--pen);border-radius:99px;transition:width .35s ease}
+
+/* ---------- timeline ---------- */
+.tl{margin-top:16px;position:relative}
+.tl::before{content:"";position:absolute;left:52px;top:6px;bottom:6px;width:1px;background:var(--line)}
+.item{display:grid;grid-template-columns:44px 20px 1fr;gap:8px;align-items:start;padding:9px 0}
+.item .time{font-variant-numeric:tabular-nums;font-weight:600;font-size:14px;color:var(--ink-2);padding-top:9px;text-align:right}
+.dotwrap{display:grid;place-items:center;padding-top:12px}
+.dot{width:11px;height:11px;border-radius:50%;border:2px solid var(--pen);background:var(--paper);position:relative;z-index:1}
+.item.done .dot{background:var(--pen)}
+.item.now .dot{box-shadow:0 0 0 5px var(--pen-soft)}
+.body{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:11px 12px;box-shadow:var(--shadow);display:flex;gap:10px;align-items:flex-start}
+.item.now .body{border-color:var(--pen)}
+.body .t{flex:1;min-width:0}
+.body .name{font-weight:600;line-height:1.35;word-break:break-word;position:relative;display:inline}
+.item.done .name{color:var(--ink-2)}
+.item.done .name::after{
+  content:"";position:absolute;left:-3px;right:-3px;top:46%;height:12px;
+  background:var(--marker-soft);transform:rotate(-1.1deg);border-radius:3px;z-index:-1;
+}
+.item.done .name{z-index:0}
+.body .note{font-size:13px;color:var(--ink-2);margin-top:3px;word-break:break-word}
+.days-hint{font-size:12px;color:var(--ink-3);margin-top:4px}
+.check{width:26px;height:26px;border-radius:8px;border:1.5px solid var(--line);display:grid;place-items:center;flex:0 0 auto;font-size:14px;color:transparent}
+.item.done .check{background:var(--pen);border-color:var(--pen);color:#fff}
+.mini{font-size:12px;color:var(--ink-3);padding:4px 6px;border-radius:7px}
+.mini:hover{background:var(--pen-soft);color:var(--pen)}
+
+/* ---------- notes ---------- */
+.composer{margin-top:14px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:12px}
+textarea.note-in{width:100%;border:none;background:none;resize:vertical;min-height:84px;outline:none;line-height:1.55}
+.composer-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:6px;border-top:1px solid var(--line);padding-top:9px}
+.btn{background:var(--pen);color:#fff;border-radius:10px;padding:9px 15px;font-weight:600;font-size:14px}
+.btn:active{transform:scale(.97)}
+.btn.ghost{background:none;color:var(--pen);border:1px solid var(--line)}
+.btn.danger{background:none;color:var(--red);border:1px solid var(--line)}
+.btn.wide{width:100%;text-align:center}
+.searchbar{display:flex;gap:8px;margin-top:14px}
+.searchbar input{flex:1;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;outline:none}
+.searchbar input:focus{border-color:var(--pen)}
+.chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.chip{font-size:13px;padding:5px 10px;border-radius:99px;border:1px solid var(--line);background:var(--card);color:var(--ink-2)}
+.chip.on{background:var(--pen);border-color:var(--pen);color:#fff}
+.note-card{margin-top:10px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:12px;box-shadow:var(--shadow)}
+.note-card .txt{white-space:pre-wrap;word-break:break-word;line-height:1.55}
+.note-meta{display:flex;align-items:center;gap:10px;margin-top:9px;font-size:12px;color:var(--ink-3)}
+.note-meta .sp{flex:1}
+.tag{color:var(--pen);font-weight:600}
+.star{font-size:15px}
+
+/* ---------- tracker ---------- */
+.moods{display:flex;gap:8px;margin-top:12px}
+.mood{flex:1;aspect-ratio:1/1.05;border:1px solid var(--line);border-radius:var(--r);background:var(--card);display:grid;place-items:center;gap:2px;font-size:22px;box-shadow:var(--shadow)}
+.mood span{font-size:10.5px;color:var(--ink-3);line-height:1}
+.mood.on{border-color:var(--pen);background:var(--pen-soft)}
+.habit{display:flex;align-items:center;gap:12px;padding:12px;margin-top:10px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+.habit .t{flex:1;min-width:0}
+.habit .hname{font-weight:600;word-break:break-word}
+.week{display:flex;gap:4px;margin-top:6px}
+.week i{width:16px;height:16px;border-radius:5px;background:var(--pen-soft);display:grid;place-items:center;font-size:9px;color:var(--ink-3);font-style:normal}
+.week i.f{background:var(--pen)}
+.streak{font-size:12px;color:var(--ink-2);margin-top:5px}
+.flame{font-weight:700;color:var(--ink)}
+.chart{display:flex;align-items:flex-end;gap:5px;height:76px;margin-top:12px;padding:12px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+.chart div{flex:1;background:var(--pen);border-radius:4px 4px 2px 2px;min-height:3px;opacity:.85}
+
+/* ---------- settings / help ---------- */
+.row{display:flex;align-items:center;gap:12px;padding:13px 14px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);margin-top:10px;box-shadow:var(--shadow)}
+.row .t{flex:1;min-width:0}
+.row .t b{display:block;font-weight:600}
+.row .t small{color:var(--ink-2);font-size:12.5px;display:block;margin-top:2px;line-height:1.4}
+.switch{width:46px;height:27px;border-radius:99px;background:var(--line);position:relative;flex:0 0 auto;transition:background .2s}
+.switch i{position:absolute;top:3px;left:3px;width:21px;height:21px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.switch.on{background:var(--pen)}
+.switch.on i{left:22px}
+details.help{background:var(--card);border:1px solid var(--line);border-radius:var(--r);margin-top:10px;box-shadow:var(--shadow);overflow:hidden}
+details.help>summary{padding:13px 14px;font-weight:600;cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px}
+details.help>summary::-webkit-details-marker{display:none}
+details.help>summary::before{content:"›";color:var(--pen);font-size:20px;line-height:1;transform:rotate(0);transition:transform .2s;display:inline-block}
+details.help[open]>summary::before{transform:rotate(90deg)}
+.help-body{padding:0 14px 14px;font-size:14.5px;color:var(--ink-2);line-height:1.6}
+.help-body ol,.help-body ul{padding-left:20px;margin:8px 0}
+.help-body li{margin:5px 0}
+.help-body b{color:var(--ink)}
+.help-body code{background:var(--pen-soft);color:var(--pen);padding:1px 5px;border-radius:5px;font-size:13px}
+
+/* ---------- nav ---------- */
+nav.tabs{
+  position:fixed;left:0;right:0;bottom:0;z-index:30;
+  background:color-mix(in srgb,var(--card) 92%,transparent);
+  backdrop-filter:blur(12px);
+  border-top:1px solid var(--line);
+  padding:6px 8px calc(6px + var(--safe-b));
+  display:flex;justify-content:center;gap:2px;
+}
+nav.tabs button{flex:1;max-width:120px;padding:7px 4px;border-radius:12px;display:grid;justify-items:center;gap:3px;color:var(--ink-3);font-size:11px;font-weight:600}
+nav.tabs button .ic{font-size:19px;line-height:1}
+nav.tabs button.on{color:var(--pen);background:var(--pen-soft)}
+
+/* ---------- modal / lock / toast ---------- */
+.scrim{position:fixed;inset:0;background:rgba(10,15,28,.5);z-index:50;display:none;align-items:flex-end;justify-content:center}
+.scrim.on{display:flex}
+.sheet{background:var(--paper);border-radius:20px 20px 0 0;width:100%;max-width:720px;max-height:92vh;overflow:auto;padding:18px 16px calc(22px + var(--safe-b));border:1px solid var(--line)}
+@media(min-width:700px){.scrim{align-items:center}.sheet{border-radius:20px;max-height:86vh}}
+.sheet h3{font-family:ui-rounded, ui-sans-serif, system-ui, sans-serif;font-size:17px;font-weight:500;margin:0 0 14px}
+label.f{display:block;margin-top:13px;font-size:13px;color:var(--ink-2);font-weight:600}
+label.f input,label.f textarea{width:100%;margin-top:6px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:11px 12px;outline:none}
+label.f input:focus,label.f textarea:focus{border-color:var(--pen)}
+.dayrow{display:flex;gap:6px;margin-top:8px}
+.dayrow button{flex:1;padding:9px 0;border-radius:9px;border:1px solid var(--line);background:var(--card);font-size:13px;font-weight:600;color:var(--ink-2)}
+.dayrow button.on{background:var(--pen);border-color:var(--pen);color:#fff}
+.sheet-actions{display:flex;gap:9px;margin-top:20px}
+.sheet-actions .btn{flex:1;text-align:center}
+
+#lock{position:fixed;inset:0;z-index:90;background:var(--paper);display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px}
+#lock.on{display:flex}
+.pin-dots{display:flex;gap:11px}
+.pin-dots i{width:13px;height:13px;border-radius:50%;border:1.5px solid var(--pen)}
+.pin-dots i.f{background:var(--pen)}
+.keys{display:grid;grid-template-columns:repeat(3,72px);gap:12px;margin-top:6px}
+.keys button{height:60px;border-radius:16px;background:var(--card);border:1px solid var(--line);font-size:21px;font-weight:600;box-shadow:var(--shadow)}
+.keys button:active{background:var(--pen-soft)}
+.shake{animation:sh .35s}
+@keyframes sh{20%{transform:translateX(-9px)}40%{transform:translateX(9px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+
+#toasts{position:fixed;left:12px;right:12px;bottom:calc(84px + var(--safe-b));z-index:70;display:grid;gap:8px;justify-items:center;pointer-events:none}
+.toast{background:var(--ink);color:var(--paper);padding:11px 15px;border-radius:12px;font-size:14px;max-width:520px;box-shadow:0 10px 30px -10px rgba(0,0,0,.6);display:flex;gap:9px;align-items:center}
+.toast b{color:var(--marker)}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+
+<div id="lock">
+  <div style="font-family:ui-rounded,ui-sans-serif,system-ui,sans-serif;font-size:21px;font-weight:600">Блокнот</div>
+  <div class="muted tiny" id="lockHint">Введите пин-код</div>
+  <div class="pin-dots" id="pinDots"></div>
+  <div class="keys" id="keys"></div>
+</div>
+
+<header class="top">
+  <div class="top-in">
+    <div>
+      <div class="brand">Блокнот</div>
+      <div class="today-date" id="hdrDate"></div>
+    </div>
+    <button class="icon-btn" id="themeBtn" aria-label="Сменить тему">◐</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <!-- ДЕНЬ -->
+  <section id="v-day">
+    <div class="hero">
+      <div class="big" id="dayBig"></div>
+      <div class="sub" id="daySub"></div>
+    </div>
+    <div class="progress"><i id="dayBar" style="width:0%"></i></div>
+    <h2 class="sec">Распорядок дня</h2>
+    <div class="tl" id="tl"></div>
+    <button class="btn wide ghost" style="margin-top:16px" id="addRoutine">+ Добавить дело</button>
+  </section>
+
+  <!-- ЗАМЕТКИ -->
+  <section id="v-notes" class="hidden">
+    <div class="composer">
+      <textarea class="note-in" id="noteIn" placeholder="Что на уме? Ставьте #теги прямо в тексте — они соберутся сами."></textarea>
+      <div class="composer-bar">
+        <span class="tiny muted" id="noteHint">Теги: #идея #работа</span>
+        <button class="btn" id="noteSave">Записать</button>
+      </div>
+    </div>
+    <div class="searchbar">
+      <input id="noteSearch" placeholder="Поиск по заметкам" autocomplete="off">
+      <button class="chip" id="favFilter">★ Избранное</button>
+    </div>
+    <div class="chips" id="tagChips"></div>
+    <div id="noteList"></div>
+  </section>
+
+  <!-- ТРЕКЕР -->
+  <section id="v-track" class="hidden">
+    <h2 class="sec" style="margin-top:20px">Как вы сегодня?</h2>
+    <div class="moods" id="moods"></div>
+    <div class="chart" id="moodChart"></div>
+    <div class="tiny muted" style="margin-top:6px">Настроение за последние 14 дней</div>
+    <h2 class="sec">Привычки</h2>
+    <div id="habitList"></div>
+    <button class="btn wide ghost" style="margin-top:14px" id="addHabit">+ Добавить привычку</button>
+  </section>
+
+  <!-- ЕЩЁ -->
+  <section id="v-more" class="hidden">
+    <h2 class="sec" style="margin-top:20px">Настройки</h2>
+    <div class="row">
+      <div class="t"><b>Напоминания</b><small id="notifSub">Приложение подаст сигнал в нужное время</small></div>
+      <button class="switch" id="notifSw" aria-label="Напоминания"><i></i></button>
+    </div>
+    <div class="row">
+      <div class="t"><b>Пин-код</b><small id="pinSub">Замок на входе</small></div>
+      <button class="btn ghost" id="pinBtn">Настроить</button>
+    </div>
+    <div class="row">
+      <div class="t"><b>Тема</b><small>Светлая, тёмная или как в системе</small></div>
+      <button class="btn ghost" id="themeCycle">Системная</button>
+    </div>
+
+    <h2 class="sec">Мои данные</h2>
+    <div class="row">
+      <div class="t"><b>Сохранить копию</b><small id="statLine">—</small></div>
+      <button class="btn ghost" id="expBtn">Экспорт</button>
+    </div>
+    <div class="row">
+      <div class="t"><b>Загрузить из файла</b><small>Восстановить или перенести на другое устройство</small></div>
+      <button class="btn ghost" id="impBtn">Импорт</button>
+    </div>
+    <input type="file" id="fileIn" accept=".json,application/json" class="hidden">
+    <div class="row">
+      <div class="t"><b>Стереть всё</b><small>Удалит записи, распорядок и привычки без возврата</small></div>
+      <button class="btn danger" id="wipeBtn">Стереть</button>
+    </div>
+
+    <h2 class="sec">Инструкция</h2>
+    <details class="help"><summary>Установить на iPhone или iPad</summary><div class="help-body">
+      <ol>
+        <li>Откройте эту страницу <b>в Safari</b> (в Chrome на iPhone установка не работает).</li>
+        <li>Нажмите кнопку «Поделиться» — квадрат со стрелкой вверх, внизу экрана.</li>
+        <li>Пролистайте меню и выберите <b>«На экран "Домой"»</b>.</li>
+        <li>Задайте имя «Блокнот» и нажмите «Добавить».</li>
+        <li>Запускайте приложение <b>только с иконки на домашнем экране</b> — так оно открывается без адресной строки и запоминает ваши записи.</li>
+      </ol>
+      <p>Напоминания: при первом включении iOS спросит разрешение — нажмите «Разрешить». Держите приложение в фоне, не закрывайте свайпом вверх, иначе сигнал не придёт.</p>
+    </div></details>
+    <details class="help"><summary>Установить на Android</summary><div class="help-body">
+      <ol>
+        <li>Откройте страницу в <b>Chrome</b> (подойдут также Edge и Samsung Internet).</li>
+        <li>Нажмите ⋮ в правом верхнем углу.</li>
+        <li>Выберите <b>«Установить приложение»</b> или «Добавить на главный экран».</li>
+        <li>Подтвердите — иконка появится в списке приложений.</li>
+        <li>Разрешите уведомления, когда система спросит.</li>
+      </ol>
+      <p>Если в меню нет пункта «Установить», обновите Chrome и перезагрузите страницу.</p>
+    </div></details>
+    <details class="help"><summary>Установить на Mac</summary><div class="help-body">
+      <ol>
+        <li><b>Safari:</b> меню «Файл» → <b>«Добавить в Dock»</b>. Приложение откроется отдельным окном.</li>
+        <li><b>Chrome:</b> значок установки в адресной строке (монитор со стрелкой) или ⋮ → «Трансляция, сохранение и доступ» → «Установить страницу как приложение».</li>
+        <li>Иконка появится в Launchpad и Dock — запускайте как обычную программу.</li>
+        <li>Чтобы напоминания приходили, окно должно быть открыто хотя бы в фоне.</li>
+      </ol>
+    </div></details>
+    <details class="help"><summary>Как пользоваться</summary><div class="help-body">
+      <ul>
+        <li><b>День.</b> «+ Добавить дело» — название, время, дни недели. Нажмите на квадратик слева, чтобы отметить выполненное: строка подсветится маркером. Полоса вверху показывает, сколько из сегодняшнего пройдено.</li>
+        <li><b>Заметки.</b> Пишите мысли в любое время. Слово с решёткой — <code>#идея</code> — становится тегом, по тегам потом можно фильтровать. Звёздочка добавляет в избранное.</li>
+        <li><b>Трекер.</b> Отмечайте настроение одним касанием и ведите привычки. Полоса дней показывает неделю, «серия» — сколько дней подряд вы держитесь.</li>
+        <li><b>Данные.</b> Всё лежит в памяти самого устройства, никакого сервера. Раз в неделю делайте «Экспорт» — файл можно отправить себе и загрузить на другом телефоне через «Импорт».</li>
+      </ul>
+    </div></details>
+    <details class="help"><summary>Про напоминания и приватность</summary><div class="help-body">
+      <ul>
+        <li>Напоминания срабатывают, пока приложение открыто или висит в фоне. Это не будильник: если вы полностью закрыли приложение, сигнала не будет. Для важных дел дублируйте системным будильником.</li>
+        <li>Записи не уходят в интернет и не видны никому, кроме вас. Обратная сторона: если очистить данные браузера или удалить приложение, записи исчезнут — спасает только экспорт.</li>
+        <li>Пин-код прячет записи от случайного взгляда, но это не шифрование. Не храните здесь пароли и банковские данные.</li>
+      </ul>
+    </div></details>
+    <div class="tiny muted" style="margin-top:22px;text-align:center">Блокнот · всё хранится на вашем устройстве</div>
+  </section>
+</main>
+
+<nav class="tabs">
+  <button data-v="day" class="on"><span class="ic">◷</span>День</button>
+  <button data-v="notes"><span class="ic">✎</span>Заметки</button>
+  <button data-v="track"><span class="ic">◈</span>Трекер</button>
+  <button data-v="more"><span class="ic">≡</span>Ещё</button>
+</nav>
+
+<div class="scrim" id="scrim"><div class="sheet" id="sheet"></div></div>
+<div id="toasts"></div>
+
+<script>
+(function(){
+"use strict";
+const KEY="blocknot_v1";
+const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
+const DAYS=["Пн","Вт","Ср","Чт","Пт","Сб","Вс"];
+const MOODS=[{e:"😖",l:"тяжело"},{e:"😕",l:"так себе"},{e:"😐",l:"ровно"},{e:"🙂",l:"хорошо"},{e:"🤩",l:"отлично"}];
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const pad=n=>String(n).padStart(2,"0");
+const key=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const today=()=>key(new Date());
+const dow=d=>(d.getDay()+6)%7; // 0 = понедельник
+
+/* ---------- состояние ---------- */
+const blank={routines:[],done:{},notes:[],habits:[],moods:{},fired:{},settings:{pin:null,theme:"auto",notif:false}};
+let S=load(), view="day", noteQuery="", favOnly=false, activeTag=null, pinMode=null, pinBuf="", pinTmp="";
+
+function load(){
+  try{
+    const raw=localStorage.getItem(KEY);
+    if(!raw) return structuredClone(blank);
+    const d=JSON.parse(raw);
+    return Object.assign(structuredClone(blank),d,{settings:Object.assign({},blank.settings,d.settings||{})});
+  }catch(e){ return structuredClone(blank); }
+}
+function save(){
+  try{ localStorage.setItem(KEY,JSON.stringify(S)); }
+  catch(e){ toast("Не удалось сохранить — в браузере нет места или закрыто хранилище"); }
+}
+function toast(msg,title){
+  const el=document.createElement("div");
+  el.className="toast";
+  el.innerHTML=(title?"<b>"+esc(title)+"</b> ":"")+esc(msg);
+  $("#toasts").appendChild(el);
+  setTimeout(()=>el.remove(),5200);
+}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+
+/* ---------- тема ---------- */
+function applyTheme(){
+  const t=S.settings.theme;
+  if(t==="auto") document.documentElement.removeAttribute("data-theme");
+  else document.documentElement.setAttribute("data-theme",t);
+  $("#themeCycle").textContent={auto:"Системная",light:"Светлая",dark:"Тёмная"}[t];
+}
+$("#themeBtn").onclick=$("#themeCycle").onclick=()=>{
+  const o=["auto","light","dark"];
+  S.settings.theme=o[(o.indexOf(S.settings.theme)+1)%3];
+  save();applyTheme();
+};
+
+/* ---------- навигация ---------- */
+$$("nav.tabs button").forEach(b=>b.onclick=()=>{
+  view=b.dataset.v;
+  $$("nav.tabs button").forEach(x=>x.classList.toggle("on",x===b));
+  ["day","notes","track","more"].forEach(v=>$("#v-"+v).classList.toggle("hidden",v!==view));
+  window.scrollTo({top:0});
+  render();
+});
+
+/* ---------- шапка ---------- */
+function renderHeader(){
+  const d=new Date();
+  const m=["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"];
+  const w=["понедельник","вторник","среда","четверг","пятница","суббота","воскресенье"];
+  $("#hdrDate").textContent=d.getDate()+" "+m[d.getMonth()]+", "+w[dow(d)];
+  const h=d.getHours();
+  $("#dayBig").textContent=h<5?"Доброй ночи":h<12?"Доброе утро":h<18?"Добрый день":"Добрый вечер";
+}
+
+/* ---------- ДЕНЬ ---------- */
+function todays(){
+  const wd=dow(new Date());
+  return S.routines.filter(r=>r.days.includes(wd)).sort((a,b)=>a.time.localeCompare(b.time));
+}
+function renderDay(){
+  const list=todays(), t=today(), done=S.done[t]||[];
+  const now=pad(new Date().getHours())+":"+pad(new Date().getMinutes());
+  const left=list.filter(r=>!done.includes(r.id));
+  const next=left.find(r=>r.time>=now);
+  $("#daySub").textContent=!list.length?"на сегодня ничего не запланировано"
+    : left.length===0?"всё сделано, отдыхайте"
+    : next?"дальше в "+next.time+" — "+next.title : "осталось дел: "+left.length;
+  const pct=list.length?Math.round(done.filter(id=>list.some(r=>r.id===id)).length/list.length*100):0;
+  $("#dayBar").style.width=pct+"%";
+
+  const tl=$("#tl");
+  if(!list.length){ tl.innerHTML='<div class="empty">Пусто. Добавьте первое дело — например, «07:30 Зарядка» — и оно будет напоминать о себе каждый день.</div>'; return; }
+  let cur=null;
+  for(const r of list){ if(r.time<=now) cur=r.id; }
+  tl.innerHTML=list.map(r=>{
+    const isDone=done.includes(r.id);
+    const all=r.days.length===7, work=r.days.length===5&&r.days.every(d=>d<5);
+    const dtxt=all?"каждый день":work?"по будням":r.days.map(d=>DAYS[d]).join(" ");
+    return `<div class="item ${isDone?"done":""} ${cur===r.id&&!isDone?"now":""}" data-id="${r.id}">
+      <div class="time">${esc(r.time)}</div>
+      <div class="dotwrap"><span class="dot"></span></div>
+      <div class="body">
+        <button class="check" data-act="toggle">✓</button>
+        <div class="t">
+          <div class="name">${esc(r.title)}</div>
+          ${r.note?`<div class="note">${esc(r.note)}</div>`:""}
+          <div class="days-hint">${dtxt}</div>
+        </div>
+        <button class="mini" data-act="edit">изменить</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+$("#tl").addEventListener("click",e=>{
+  const btn=e.target.closest("[data-act]"); if(!btn) return;
+  const id=e.target.closest(".item").dataset.id, t=today();
+  if(btn.dataset.act==="toggle"){
+    S.done[t]=S.done[t]||[];
+    const i=S.done[t].indexOf(id);
+    i<0?S.done[t].push(id):S.done[t].splice(i,1);
+    save();renderDay();
+  } else routineSheet(S.routines.find(r=>r.id===id));
+});
+$("#addRoutine").onclick=()=>routineSheet(null);
+
+function routineSheet(r){
+  const isNew=!r;
+  r=r||{id:uid(),title:"",time:"08:00",note:"",days:[0,1,2,3,4,5,6]};
+  let days=r.days.slice();
+  openSheet(`<h3>${isNew?"Новое дело":"Изменить дело"}</h3>
+    <label class="f">Что делаем<input id="f-title" value="${esc(r.title)}" placeholder="Например: прогулка" maxlength="80"></label>
+    <label class="f">Во сколько<input id="f-time" type="time" value="${r.time}"></label>
+    <label class="f">В какие дни</label>
+    <div class="dayrow" id="f-days">${DAYS.map((d,i)=>`<button data-d="${i}" class="${days.includes(i)?"on":""}">${d}</button>`).join("")}</div>
+    <label class="f">Заметка, если нужна<input id="f-note" value="${esc(r.note||"")}" placeholder="необязательно" maxlength="120"></label>
+    <div class="sheet-actions">
+      <button class="btn ghost" id="f-cancel">Отмена</button>
+      ${isNew?"":'<button class="btn danger" id="f-del">Удалить</button>'}
+      <button class="btn" id="f-ok">Сохранить</button>
+    </div>`);
+  $("#f-days").onclick=e=>{
+    const b=e.target.closest("button"); if(!b) return;
+    const d=+b.dataset.d;
+    days.includes(d)?days.splice(days.indexOf(d),1):days.push(d);
+    b.classList.toggle("on");
+  };
+  $("#f-cancel").onclick=closeSheet;
+  if(!isNew) $("#f-del").onclick=()=>{
+    S.routines=S.routines.filter(x=>x.id!==r.id);
+    save();closeSheet();renderDay();toast("Дело удалено");
+  };
+  $("#f-ok").onclick=()=>{
+    const title=$("#f-title").value.trim();
+    if(!title){ $("#f-title").focus(); toast("Впишите название дела"); return; }
+    if(!days.length){ toast("Выберите хотя бы один день недели"); return; }
+    r.title=title; r.time=$("#f-time").value||"08:00"; r.note=$("#f-note").value.trim(); r.days=days.sort();
+    if(isNew) S.routines.push(r);
+    save();closeSheet();renderDay();
+    toast(isNew?"Дело добавлено":"Изменения сохранены");
+  };
+  setTimeout(()=>$("#f-title").focus(),120);
+}
+
+/* ---------- ЗАМЕТКИ ---------- */
+const parseTags=t=>Array.from(new Set((t.match(/#[\wа-яёА-ЯЁ-]{2,}/gi)||[]).map(x=>x.slice(1).toLowerCase())));
+$("#noteSave").onclick=()=>{
+  const v=$("#noteIn").value.trim();
+  if(!v){ $("#noteIn").focus(); return; }
+  S.notes.unshift({id:uid(),text:v,tags:parseTags(v),fav:false,created:Date.now()});
+  $("#noteIn").value=""; save(); renderNotes(); toast("Записано");
+};
+$("#noteSearch").oninput=e=>{noteQuery=e.target.value.toLowerCase();renderNotes();};
+$("#favFilter").onclick=()=>{favOnly=!favOnly;renderNotes();};
+function renderNotes(){
+  $("#favFilter").classList.toggle("on",favOnly);
+  const tags={};
+  S.notes.forEach(n=>n.tags.forEach(t=>tags[t]=(tags[t]||0)+1));
+  const tl=Object.entries(tags).sort((a,b)=>b[1]-a[1]).slice(0,12);
+  $("#tagChips").innerHTML=tl.map(([t,c])=>`<button class="chip ${activeTag===t?"on":""}" data-t="${esc(t)}">#${esc(t)} ${c}</button>`).join("");
+  let list=S.notes;
+  if(favOnly) list=list.filter(n=>n.fav);
+  if(activeTag) list=list.filter(n=>n.tags.includes(activeTag));
+  if(noteQuery) list=list.filter(n=>n.text.toLowerCase().includes(noteQuery)||n.tags.some(t=>t.includes(noteQuery)));
+  $("#noteList").innerHTML=!list.length
+    ? `<div class="empty" style="margin-top:14px">${S.notes.length?"Ничего не нашлось. Попробуйте другое слово или снимите фильтры.":"Здесь будут ваши мысли. Первую можно записать прямо сейчас."}</div>`
+    : list.map(n=>{
+        const d=new Date(n.created);
+        return `<div class="note-card" data-id="${n.id}">
+          <div class="txt">${esc(n.text).replace(/#([\wа-яёА-ЯЁ-]{2,})/gi,'<span class="tag">#$1</span>')}</div>
+          <div class="note-meta">
+            <span>${pad(d.getDate())}.${pad(d.getMonth()+1)} · ${pad(d.getHours())}:${pad(d.getMinutes())}</span>
+            <span class="sp"></span>
+            <button class="mini star" data-act="fav">${n.fav?"★":"☆"}</button>
+            <button class="mini" data-act="del">удалить</button>
+          </div></div>`;
+      }).join("");
+}
+$("#tagChips").onclick=e=>{
+  const b=e.target.closest("[data-t]"); if(!b) return;
+  activeTag=activeTag===b.dataset.t?null:b.dataset.t; renderNotes();
+};
+$("#noteList").onclick=e=>{
+  const b=e.target.closest("[data-act]"); if(!b) return;
+  const id=e.target.closest(".note-card").dataset.id;
+  const n=S.notes.find(x=>x.id===id);
+  if(b.dataset.act==="fav"){ n.fav=!n.fav; save(); renderNotes(); }
+  else if(confirm("Удалить эту заметку?")){ S.notes=S.notes.filter(x=>x.id!==id); save(); renderNotes(); }
+};
+
+/* ---------- ТРЕКЕР ---------- */
+function renderTrack(){
+  const t=today(), cur=S.moods[t];
+  $("#moods").innerHTML=MOODS.map((m,i)=>`<button class="mood ${cur===i+1?"on":""}" data-m="${i+1}">${m.e}<span>${m.l}</span></button>`).join("");
+  const days=[];
+  for(let i=13;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i); days.push(S.moods[key(d)]||0); }
+  $("#moodChart").innerHTML=days.map(v=>`<div style="height:${v?v/5*100:4}%;opacity:${v?.85:.2}"></div>`).join("");
+
+  $("#habitList").innerHTML=!S.habits.length
+    ? '<div class="empty">Привычка — это одно маленькое действие каждый день. Например «стакан воды утром».</div>'
+    : S.habits.map(h=>{
+      let week="";
+      for(let i=6;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i);
+        week+=`<i class="${h.log[key(d)]?"f":""}">${DAYS[dow(d)][0]}</i>`; }
+      return `<div class="habit" data-id="${h.id}">
+        <button class="check ${h.log[t]?"":""}" data-act="tog" style="${h.log[t]?"background:var(--pen);border-color:var(--pen);color:#fff":""}">✓</button>
+        <div class="t"><div class="hname">${esc(h.name)}</div>
+          <div class="week">${week}</div>
+          <div class="streak">Серия: <span class="flame">${streak(h)} дн.</span> · всего ${Object.keys(h.log).length}</div>
+        </div>
+        <button class="mini" data-act="del">удалить</button>
+      </div>`;
+    }).join("");
+}
+function streak(h){
+  let n=0, d=new Date();
+  if(!h.log[key(d)]) d.setDate(d.getDate()-1);
+  while(h.log[key(d)]){ n++; d.setDate(d.getDate()-1); }
+  return n;
+}
+$("#moods").onclick=e=>{
+  const b=e.target.closest("[data-m]"); if(!b) return;
+  const t=today(), v=+b.dataset.m;
+  S.moods[t]===v?delete S.moods[t]:S.moods[t]=v;
+  save();renderTrack();
+};
+$("#habitList").onclick=e=>{
+  const b=e.target.closest("[data-act]"); if(!b) return;
+  const id=e.target.closest(".habit").dataset.id, h=S.habits.find(x=>x.id===id);
+  if(b.dataset.act==="tog"){ const t=today(); h.log[t]?delete h.log[t]:h.log[t]=true; save(); renderTrack(); }
+  else if(confirm("Удалить привычку «"+h.name+"» вместе с историей?")){ S.habits=S.habits.filter(x=>x.id!==id); save(); renderTrack(); }
+};
+$("#addHabit").onclick=()=>{
+  openSheet(`<h3>Новая привычка</h3>
+    <label class="f">Название<input id="h-name" placeholder="Например: 20 минут чтения" maxlength="60"></label>
+    <div class="sheet-actions"><button class="btn ghost" id="h-cancel">Отмена</button><button class="btn" id="h-ok">Добавить</button></div>`);
+  $("#h-cancel").onclick=closeSheet;
+  $("#h-ok").onclick=()=>{
+    const v=$("#h-name").value.trim();
+    if(!v){ $("#h-name").focus(); return; }
+    S.habits.push({id:uid(),name:v,log:{}});
+    save();closeSheet();renderTrack();toast("Привычка добавлена");
+  };
+  setTimeout(()=>$("#h-name").focus(),120);
+};
+
+/* ---------- НАПОМИНАНИЯ ---------- */
+let canNotify=false;
+async function enableNotif(){
+  try{
+    if(!("Notification" in window)){ toast("Браузер не умеет системные уведомления — сигнал покажется внутри приложения"); canNotify=false; return true; }
+    const p=await Notification.requestPermission();
+    canNotify=(p==="granted");
+    if(!canNotify) toast("Разрешение не выдано — напоминания покажутся внутри приложения");
+    return true;
+  }catch(e){ canNotify=false; return true; }
+}
+function fire(r){
+  const t=today();
+  S.fired[t]=S.fired[t]||[];
+  if(S.fired[t].includes(r.id)) return;
+  S.fired[t].push(r.id); save();
+  const body=r.note||"Время: "+r.time;
+  if(canNotify){ try{ new Notification(r.title,{body,tag:r.id}); }catch(e){ toast(body,r.title); } }
+  else toast(body,r.title);
+  try{ beep(); }catch(e){}
+}
+function beep(){
+  const C=window.AudioContext||window.webkitAudioContext; if(!C) return;
+  const a=new C(), o=a.createOscillator(), g=a.createGain();
+  o.connect(g); g.connect(a.destination); o.frequency.value=880; o.type="sine";
+  g.gain.setValueAtTime(.0001,a.currentTime);
+  g.gain.exponentialRampToValueAtTime(.18,a.currentTime+.03);
+  g.gain.exponentialRampToValueAtTime(.0001,a.currentTime+.5);
+  o.start(); o.stop(a.currentTime+.55);
+}
+function tick(){
+  if(!S.settings.notif) return;
+  const d=new Date(), now=pad(d.getHours())+":"+pad(d.getMinutes()), t=today(), done=S.done[t]||[];
+  todays().forEach(r=>{ if(r.time===now && !done.includes(r.id)) fire(r); });
+  // чистим старые отметки
+  Object.keys(S.fired).forEach(k=>{ if(k!==t) delete S.fired[k]; });
+}
+setInterval(tick,15000);
+function renderNotifSw(){
+  $("#notifSw").classList.toggle("on",!!S.settings.notif);
+  $("#notifSub").textContent=S.settings.notif
+    ? "Включены. Приложение должно быть открыто или в фоне"
+    : "Приложение подаст сигнал в нужное время";
+}
+$("#notifSw").onclick=async()=>{
+  if(!S.settings.notif){ await enableNotif(); S.settings.notif=true; toast("Напоминания включены"); }
+  else S.settings.notif=false;
+  save();renderNotifSw();
+};
+
+/* ---------- ПИН ---------- */
+$("#keys").innerHTML=[1,2,3,4,5,6,7,8,9,"",0,"⌫"].map(k=>k===""?'<span></span>':`<button data-k="${k}">${k}</button>`).join("");
+$("#keys").onclick=e=>{
+  const b=e.target.closest("[data-k]"); if(!b) return;
+  const k=b.dataset.k;
+  if(k==="⌫") pinBuf=pinBuf.slice(0,-1);
+  else if(pinBuf.length<4) pinBuf+=k;
+  drawDots();
+  if(pinBuf.length===4) setTimeout(pinSubmit,120);
+};
+function drawDots(){
+  $("#pinDots").innerHTML=[0,1,2,3].map(i=>`<i class="${i<pinBuf.length?"f":""}"></i>`).join("");
+}
+function pinSubmit(){
+  if(pinMode==="unlock"){
+    if(pinBuf===S.settings.pin){ $("#lock").classList.remove("on"); pinBuf=""; drawDots(); }
+    else fail("Неверный пин-код");
+  } else if(pinMode==="set1"){
+    pinTmp=pinBuf; pinBuf=""; drawDots(); pinMode="set2"; $("#lockHint").textContent="Повторите пин-код";
+  } else if(pinMode==="set2"){
+    if(pinBuf===pinTmp){ S.settings.pin=pinTmp; save(); $("#lock").classList.remove("on"); pinBuf=""; renderPinRow(); toast("Пин-код установлен"); }
+    else { pinTmp=""; pinMode="set1"; $("#lockHint").textContent="Не совпало. Задайте пин-код заново"; fail(); }
+  }
+}
+function fail(msg){
+  pinBuf=""; drawDots();
+  const l=$("#lock"); l.classList.add("shake"); setTimeout(()=>l.classList.remove("shake"),380);
+  if(msg) $("#lockHint").textContent=msg;
+}
+function renderPinRow(){
+  $("#pinSub").textContent=S.settings.pin?"Включён — спросим при запуске":"Замок на входе";
+  $("#pinBtn").textContent=S.settings.pin?"Выключить":"Настроить";
+}
+$("#pinBtn").onclick=()=>{
+  if(S.settings.pin){ S.settings.pin=null; save(); renderPinRow(); toast("Пин-код выключен"); return; }
+  pinMode="set1"; pinBuf=""; pinTmp=""; drawDots();
+  $("#lockHint").textContent="Придумайте пин-код из 4 цифр";
+  $("#lock").classList.add("on");
+};
+
+/* ---------- ДАННЫЕ ---------- */
+function stats(){
+  return S.notes.length+" зам. · "+S.routines.length+" дел · "+S.habits.length+" привычек";
+}
+$("#expBtn").onclick=async()=>{
+  const data=JSON.stringify(S,null,2);
+  const name="blocknot-"+today()+".json";
+  try{
+    const b=new Blob([data],{type:"application/json"});
+    const a=document.createElement("a");
+    a.href=URL.createObjectURL(b); a.download=name; a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+    toast("Копия сохранена");
+  }catch(e){
+    openSheet(`<h3>Ваши данные</h3><p class="tiny muted">Скопируйте текст и сохраните в любую заметку или файл.</p>
+      <textarea readonly style="width:100%;height:200px;margin-top:10px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px;font-size:12px">${esc(data)}</textarea>
+      <div class="sheet-actions"><button class="btn ghost" id="x-close">Закрыть</button><button class="btn" id="x-copy">Скопировать</button></div>`);
+    $("#x-close").onclick=closeSheet;
+    $("#x-copy").onclick=()=>{navigator.clipboard.writeText(data).then(()=>toast("Скопировано"),()=>toast("Скопируйте вручную"));};
+  }
+};
+$("#impBtn").onclick=()=>$("#fileIn").click();
+$("#fileIn").onchange=e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const d=JSON.parse(r.result);
+      if(!d || typeof d!=="object" || !("notes" in d || "routines" in d)) throw 0;
+      if(!confirm("Заменить текущие записи данными из файла?")) return;
+      S=Object.assign(structuredClone(blank),d,{settings:Object.assign({},blank.settings,d.settings||{})});
+      save();applyTheme();render();toast("Данные загружены");
+    }catch(err){ toast("Файл не подошёл — нужен json, сделанный кнопкой «Экспорт»"); }
+  };
+  r.readAsText(f); e.target.value="";
+};
+$("#wipeBtn").onclick=()=>{
+  if(!confirm("Удалить все записи безвозвратно? Сначала лучше сделать экспорт.")) return;
+  if(!confirm("Точно? Вернуть будет нельзя.")) return;
+  S=structuredClone(blank); save(); render(); toast("Всё стёрто");
+};
+
+/* ---------- лист ---------- */
+function openSheet(html){ $("#sheet").innerHTML=html; $("#scrim").classList.add("on"); }
+function closeSheet(){ $("#scrim").classList.remove("on"); $("#sheet").innerHTML=""; }
+$("#scrim").onclick=e=>{ if(e.target===$("#scrim")) closeSheet(); };
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeSheet(); });
+
+/* ---------- запуск ---------- */
+function render(){
+  renderHeader();
+  if(view==="day") renderDay();
+  if(view==="notes") renderNotes();
+  if(view==="track") renderTrack();
+  if(view==="more"){ renderNotifSw(); renderPinRow(); $("#statLine").textContent=stats(); }
+}
+applyTheme();
+render();
+if(S.settings.pin){ pinMode="unlock"; drawDots(); $("#lockHint").textContent="Введите пин-код"; $("#lock").classList.add("on"); }
+if(S.settings.notif) enableNotif();
+document.addEventListener("visibilitychange",()=>{ if(!document.hidden){ render(); tick(); } });
+setInterval(()=>{ if(view==="day"&&!document.hidden) renderDay(); },60000);
+if("serviceWorker" in navigator){ navigator.serviceWorker.register("sw.js").catch(()=>{}); }
+})();
+</script>
+</body>
+</html>
